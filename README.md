@@ -65,25 +65,3 @@ Interactive API Swagger documentation is available at:
 
 ---
 
-## 📂 Project Architecture
-
-```
-calories prediction/
-├── app.py                     # FastAPI application & ML inference endpoints
-├── train_model.py             # Model training, evaluation & serialization pipeline
-├── calories.csv               # Ground truth calories dataset
-├── exercise.csv               # Exercise biometric features dataset
-├── requirements.txt           # Project package dependencies
-├── models/
-│   ├── xgboost_model.pkl      # Serialized XGBoost model (99.93% R²)
-│   ├── random_forest_model.pkl# Serialized Random Forest model
-│   ├── gradient_boosting_model.pkl
-│   ├── linear_regression_model.pkl
-│   └── metadata.json          # Metrics, feature importances & stats
-└── static/
-    ├── index.html             # High-fidelity dashboard interface
-    └── assets/
-        ├── hero_athlete.png   # Athlete banner visual
-        ├── sarah_avatar.png   # Profile avatar
-        └── team_avatars.png   # Team avatars
-```
