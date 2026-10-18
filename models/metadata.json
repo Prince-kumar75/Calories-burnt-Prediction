@@ -1,0 +1,52 @@
+{
+    "features": [
+        "Gender_Code",
+        "Age",
+        "Height",
+        "Weight",
+        "Duration",
+        "Heart_Rate",
+        "Body_Temp",
+        "BMI"
+    ],
+    "model_performance": {
+        "xgboost": {
+            "r2_score": 0.9993,
+            "mae": 1.183,
+            "rmse": 1.649
+        },
+        "random_forest": {
+            "r2_score": 0.9979,
+            "mae": 1.901,
+            "rmse": 2.921
+        },
+        "gradient_boosting": {
+            "r2_score": 0.9991,
+            "mae": 1.431,
+            "rmse": 1.948
+        },
+        "linear_regression": {
+            "r2_score": 0.9688,
+            "mae": 8.195,
+            "rmse": 11.22
+        }
+    },
+    "feature_importances": {
+        "Gender_Code": 0.0164,
+        "Age": 0.0268,
+        "Height": 0.0005,
+        "Weight": 0.0056,
+        "Duration": 0.6919,
+        "Heart_Rate": 0.1879,
+        "Body_Temp": 0.0707,
+        "BMI": 0.0002
+    },
+    "dataset_summary": {
+        "total_samples": 15000,
+        "avg_calories": 89.54,
+        "max_calories": 314.0,
+        "min_calories": 1.0,
+        "avg_duration": 15.53,
+        "avg_heart_rate": 95.52
+    }
+}

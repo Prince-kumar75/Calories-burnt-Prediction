@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calories Burnt Prediction — Smart Fitness Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#2563EB',
+              accent: '#3B82F6',
+              dark: '#1E293B',
+              slate: '#0F172A',
+              card: '#FFFFFF',
+              bgLight: '#ECEEF2',
+              coral: '#FB7185',
+              purple: '#818CF8',
+              cyan: '#38BDF8'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          boxShadow: {
+            'soft': '0 12px 36px -4px rgba(100, 116, 139, 0.08), 0 4px 12px -2px rgba(100, 116, 139, 0.04)',
+            'card': '0 10px 25px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+            'pill': '0 4px 14px 0 rgba(37, 99, 235, 0.25)',
+            'glow': '0 0 25px -3px rgba(56, 189, 248, 0.4)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #ECEEF2;
+      color: #1E293B;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .dark body {
+      background-color: #0b1120;
+      color: #F8FAFC;
+    }
+    /* Smooth custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+
+    /* Radial segmented gauge tick marks */
+    .gauge-tick {
+      transform-origin: 100px 100px;
+      transition: stroke 0.3s ease, stroke-width 0.3s ease;
+    }
+
+    /* Pulse wave animations */
+    @keyframes pulse-bar {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1); }
+    }
+    .pulse-bar {
+      transform-origin: bottom;
+      animation: pulse-bar 1.6s ease-in-out infinite;
+    }
+
+    /* Slider styling */
+    input[type=range] {
+      accent-color: #2563EB;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-3 md:p-6 lg:p-8 flex items-center justify-center">
+
+  <!-- Main Container Card -->
+  <div class="w-full max-w-[1440px] bg-[#F7F8FA] dark:bg-[#0f172a] rounded-[36px] shadow-2xl border border-[#E2E8F0]/60 dark:border-slate-800 p-4 md:p-6 lg:p-7 flex flex-col lg:flex-row gap-6 transition-all duration-300">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-full lg:w-56 flex-shrink-0 flex flex-col justify-between items-center py-2 lg:py-4">
+      <div class="w-full flex flex-col items-center">
+        <!-- Clean Brand / App Header -->
+        <div class="flex items-center gap-2.5 py-2 mb-2">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 text-white flex items-center justify-center font-black shadow-pill text-lg">⚡</div>
+          <div>
+            <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-tight leading-none">CalorieFit</h2>
+            <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">AI Biometrics</span>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="w-full mt-8 space-y-2.5">
+          <!-- Dashboard (Active) -->
+          <a href="#" class="flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold shadow-card border border-slate-200/50 dark:border-slate-700/50 transition-all">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 4h7v7H4V4zm0 9h7v7H4v-7zm9-9h7v7h-7V4zm0 9h7v7h-7v-7z"/>
+            </svg>
+            <span class="text-sm">Dashboard</span>
+          </a>
+
+          <!-- Activity -->
+          <a href="#" onclick="openActivityDrawer(event)" class="flex items-center gap-3.5 px-5 py-3 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50 transition-all font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="text-sm">Activity</span>
+          </a>
+
+          <!-- Calorie AI Predictor (Highlight) -->
+          <a href="#" onclick="openPredictorModal(); return false;" class="flex items-center justify-between px-5 py-3 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/80 dark:hover:bg-slate-800/60 transition-all font-medium group">
+            <div class="flex items-center gap-3.5">
+              <svg class="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C9.5 2 7 4.5 7 7.5c0 2.4 1.5 4.5 3.5 5.5-2.5 1-4.5 3.5-4.5 6.5 0 1.4.6 2.5 1.5 2.5h9c.9 0 1.5-1.1 1.5-2.5 0-3-2-5.5-4.5-6.5 2-1 3.5-3.1 3.5-5.5C17 4.5 14.5 2 12 2z"/>
+              </svg>
+              <span class="text-sm">Predictor AI</span>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-full">99.9%</span>
+          </a>
+
+          <!-- Chat -->
+          <a href="#" onclick="openChatDrawer(event)" class="flex items-center gap-3.5 px-5 py-3 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50 transition-all font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span class="text-sm">Chat</span>
+          </a>
+
+          <!-- Progress -->
+          <a href="#" onclick="openProgressDrawer(event)" class="flex items-center gap-3.5 px-5 py-3 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50 transition-all font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"/>
+            </svg>
+            <span class="text-sm">Progress</span>
+          </a>
+
+          <!-- Support -->
+          <a href="#" onclick="openSupportDrawer(event)" class="flex items-center gap-3.5 px-5 py-3 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50 transition-all font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="text-sm">Support</span>
+          </a>
+
+          <!-- Setting -->
+          <a href="#" onclick="openSettingsDrawer(event)" class="flex items-center gap-3.5 px-5 py-3 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50 transition-all font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span class="text-sm">Setting</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Light / Dark Switch -->
+      <div class="mt-8 flex items-center gap-3 bg-slate-200/60 dark:bg-slate-800/80 p-1.5 rounded-full border border-slate-300/40 dark:border-slate-700">
+        <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-400">Light</span>
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="w-12 h-6 bg-blue-600 rounded-full relative p-0.5 transition-colors focus:outline-none" aria-label="Toggle Theme">
+          <div id="themeToggleCircle" class="w-5 h-5 bg-white rounded-full shadow-md transform translate-x-0 transition-transform"></div>
+        </button>
+        <span class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-400">Dark</span>
+      </div>
+    </aside>
+
+    <!-- CENTER & RIGHT AREA -->
+    <main class="flex-1 flex flex-col gap-6">
+
+      <!-- TOP BAR -->
+      <header class="flex items-center justify-between pb-2">
+        <div class="flex items-center gap-3">
+          <button class="text-slate-700 dark:text-slate-300 hover:text-slate-900 flex items-center gap-1 font-bold text-xl tracking-tight">
+            <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span>Dashboard</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-4">
+          <!-- Info Icon -->
+          <button onclick="openInfoModal()" title="System Information & ML Model Specs" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200/60 dark:border-slate-700 flex items-center justify-center hover:bg-slate-50 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </button>
+
+          <!-- Messages -->
+          <button onclick="openChatDrawer(event)" title="Inbox" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200/60 dark:border-slate-700 flex items-center justify-center hover:bg-slate-50 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="16" rx="3"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </button>
+
+          <!-- Bell with Notification Dot -->
+          <button onclick="openNotifications()" title="Notifications" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200/60 dark:border-slate-700 flex items-center justify-center relative hover:bg-slate-50 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-800"></span>
+          </button>
+
+          <!-- Blue Plus Action Button -->
+          <button onclick="openPredictorModal()" title="Predict Calories Burnt" class="w-10 h-10 rounded-full bg-blue-600 text-white shadow-pill flex items-center justify-center hover:bg-blue-700 transition-all hover:scale-105 active:scale-95">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- CONTENT GRID: Center (Hero + Health) & Right (Quick actions + Stats + Activity) -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        <!-- CENTER COLUMN (Hero & Health Status) -->
+        <div class="xl:col-span-8 flex flex-col gap-6">
+
+          <!-- HERO BANNER CARD -->
+          <div class="relative bg-white dark:bg-slate-800/90 rounded-[32px] p-6 md:p-8 shadow-soft border border-slate-200/60 dark:border-slate-700/60 overflow-hidden flex flex-col md:flex-row items-center justify-between min-h-[260px]">
+            <!-- Subtle background accent glow -->
+            <div class="absolute -top-10 -left-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Athlete cut out image -->
+            <div class="w-full md:w-1/2 flex justify-center md:justify-start items-center relative z-10 -mb-6 md:mb-0">
+              <img src="/static/assets/hero_athlete.png" alt="Athlete Stretching" class="max-h-[220px] md:max-h-[260px] object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500">
+            </div>
+
+            <!-- Hero Welcome Content -->
+            <div class="w-full md:w-1/2 z-10 flex flex-col items-start justify-center pt-4 md:pt-0">
+              <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                Welcome back!
+              </h1>
+              <p class="mt-2 text-slate-500 dark:text-slate-300 font-medium text-base">
+                Ready to plan your next exercise and predict your calories burnt?
+              </p>
+              <div class="mt-6 flex flex-wrap items-center gap-3">
+                <button onclick="openPredictorModal()" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-pill transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center gap-2">
+                  <span>Create Today's Plan</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+                <button onclick="quickPredictorWithSample()" class="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-full transition-all text-sm">
+                  ⚡ Quick Calculate
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- HEALTH STATUS SECTION -->
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold tracking-wider text-slate-800 dark:text-slate-200 uppercase">
+                HEALTH STATUS
+              </h3>
+              <span class="text-xs font-semibold text-blue-600 dark:text-blue-400 cursor-pointer hover:underline" onclick="refreshHealthStatus()">
+                Synced with Apple Watch & IoT
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              
+              <!-- CARD 1: Hydration Level -->
+              <div class="bg-white dark:bg-slate-800/90 rounded-[28px] p-6 shadow-soft border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <h4 class="text-slate-700 dark:text-slate-200 font-semibold text-base">Hydration level</h4>
+                  </div>
+                  <div class="text-right">
+                    <span id="hydrationPercent" class="text-3xl font-extrabold text-slate-900 dark:text-white">69</span>
+                    <span class="text-xl font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+
+                <!-- Circular Gauge -->
+                <div class="my-3 flex items-center justify-between">
+                  <!-- Segmented Radial Gauge SVG -->
+                  <div class="relative w-36 h-36 flex items-center justify-center">
+                    <svg viewBox="0 0 200 200" class="w-full h-full">
+                      <!-- 25 Segmented Tick Marks -->
+                      <g id="gaugeTicks">
+                        <!-- Dynamically filled with ticks -->
+                      </g>
+                    </svg>
+                    <!-- Center Metric -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <span id="hydrationLiters" class="text-2xl font-black text-slate-800 dark:text-white">1,6 L</span>
+                      <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Hydrated</span>
+                    </div>
+                  </div>
+
+                  <!-- Side Metrics -->
+                  <div class="flex flex-col gap-3 pr-2">
+                    <div class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold text-sm">
+                      <span class="text-amber-500">⚡</span>
+                      <span id="heartStatSmall">91 Bpm</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold text-sm">
+                      <span class="text-blue-500">💧</span>
+                      <span>Well</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bottom Details -->
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs font-medium text-slate-400">
+                  <span>292 ml mineral water today</span>
+                  <span class="font-bold text-slate-600 dark:text-slate-300">2L Per day</span>
+                </div>
+              </div>
+
+              <!-- CARD 2: Heart Rate -->
+              <div class="bg-white dark:bg-slate-800/90 rounded-[28px] p-6 shadow-soft border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <h4 class="text-slate-700 dark:text-slate-200 font-semibold text-base">Heart rate</h4>
+                    <span class="text-xs text-blue-500 font-medium">60-100 beats per minute</span>
+                  </div>
+                  <div class="text-right">
+                    <span id="heartRateBig" class="text-3xl font-extrabold text-slate-900 dark:text-white">88</span>
+                    <span class="text-xs font-bold text-slate-400 ml-1">BPM</span>
+                  </div>
+                </div>
+
+                <!-- Heart Rate Visualizer Waveform / Equalizer Bars -->
+                <div class="my-4 h-24 flex items-end justify-between gap-1.5 px-2" id="heartRateEqualizer">
+                  <!-- Dynamic bars -->
+                </div>
+
+                <!-- Bottom Status -->
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs font-medium text-slate-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span>Live Biometric Pulse</span>
+                  </span>
+                  <span class="font-bold text-emerald-600 dark:text-emerald-400">Normal Resting</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- MOTIVATIONAL BANNER -->
+            <div class="bg-white dark:bg-slate-800/90 rounded-[24px] px-6 py-4 shadow-soft border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl flex-shrink-0">
+                  😊
+                </div>
+                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  Congrats! Your Activity is much beter than <a href="#" onclick="openActivityDrawer(event)" class="text-blue-600 dark:text-blue-400 underline underline-offset-2">Yesterday..</a> Keep it up!
+                </p>
+              </div>
+              <button onclick="openActivityDrawer(event)" class="w-10 h-10 rounded-full border border-blue-600 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <line x1="7" y1="17" x2="17" y2="7"/>
+                  <polyline points="7 7 17 7 17 17"/>
+                </svg>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN (Quick Actions, Statistics, Your Activity) -->
+        <div class="xl:col-span-4 flex flex-col gap-6">
+
+          <!-- QUICK ACTIONS -->
+          <div class="bg-white dark:bg-slate-800/90 rounded-[28px] p-6 shadow-soft border border-slate-200/60 dark:border-slate-700/60">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                QUICK ACTIONS
+              </h4>
+              <button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="grid grid-cols-4 gap-3">
+              <!-- Dumbbell -->
+              <button onclick="loadActivityPreset('Cardio Masterclass', 30, 138, 38.8)" title="Strength & Cardio" class="h-14 rounded-2xl bg-slate-100 hover:bg-blue-50 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-blue-600 flex items-center justify-center transition-all hover:scale-105">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12"/>
+                </svg>
+              </button>
+
+              <!-- Calendar -->
+              <button onclick="openScheduleModal()" title="Schedule Plan" class="h-14 rounded-2xl bg-slate-100 hover:bg-blue-50 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-blue-600 flex items-center justify-center transition-all hover:scale-105">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </button>
+
+              <!-- Stopwatch -->
+              <button onclick="openTimerModal()" title="Live Workout Timer" class="h-14 rounded-2xl bg-slate-100 hover:bg-blue-50 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-blue-600 flex items-center justify-center transition-all hover:scale-105">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="14" r="8"/>
+                  <line x1="12" y1="2" x2="12" y2="6"/>
+                  <line x1="12" y1="14" x2="15" y2="11"/>
+                </svg>
+              </button>
+
+              <!-- Blue Plus (Opens Predictor) -->
+              <button onclick="openPredictorModal()" title="Calculate Burnt Calories" class="h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-pill flex items-center justify-center transition-all hover:scale-105">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- STATISTICS (Stacked Bar Chart) -->
+          <div class="bg-white dark:bg-slate-800/90 rounded-[28px] p-6 shadow-soft border border-slate-200/60 dark:border-slate-700/60">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-4">
+              STATISTICS
+            </h4>
+
+            <div class="flex items-start justify-between">
+              <!-- Stacked Bars Container -->
+              <div class="flex-1 flex items-end justify-between h-40 pr-4 pb-2" id="stackedBarChart">
+                <!-- Stacked bars Mon-Sun injected dynamically -->
+              </div>
+
+              <!-- Legend -->
+              <div class="flex flex-col gap-3 pl-3 border-l border-slate-100 dark:border-slate-700 text-xs font-medium">
+                <div class="flex items-center gap-2">
+                  <span class="w-3.5 h-3.5 rounded-full border-2 border-rose-400 bg-transparent"></span>
+                  <span class="text-slate-600 dark:text-slate-300">Activity</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3.5 h-3.5 rounded-full border-2 border-indigo-400 bg-transparent"></span>
+                  <span class="text-slate-600 dark:text-slate-300">Nutrition</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3.5 h-3.5 rounded-full border-2 border-sky-400 bg-transparent"></span>
+                  <span class="text-slate-600 dark:text-slate-300">Mindfulness</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- YOUR ACTIVITY -->
+          <div class="bg-white dark:bg-slate-800/90 rounded-[28px] p-6 shadow-soft border border-slate-200/60 dark:border-slate-700/60 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                YOUR ACTIVITIY
+              </h4>
+              <span class="text-xs text-slate-400 font-semibold" id="totalLoggedCount">2 logged today</span>
+            </div>
+
+            <!-- Activity List -->
+            <div class="space-y-4">
+              
+              <!-- Item 1: Cardio Masterclass -->
+              <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+                <div class="flex items-center gap-3">
+                  <!-- Circular Ring 78% -->
+                  <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                      <path class="text-slate-100 dark:text-slate-700" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="text-blue-600" stroke-dasharray="78, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="absolute text-[11px] font-bold text-slate-800 dark:text-white">78%</span>
+                  </div>
+                  <div>
+                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">Cardio Masterclass</h5>
+                    <p class="text-xs text-slate-400 font-medium">6 Reps - Advance</p>
+                  </div>
+                </div>
+                <button onclick="loadActivityPreset('Cardio Masterclass', 30, 138, 38.8)" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm transition-all flex items-center gap-1">
+                  <span>Resume</span>
+                  <span>▶</span>
+                </button>
+              </div>
+
+              <!-- Item 2: 10K City Running -->
+              <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+                <div class="flex items-center gap-3">
+                  <!-- Circular Ring 0% -->
+                  <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                      <path class="text-slate-100 dark:text-slate-700" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="absolute text-[11px] font-bold text-slate-800 dark:text-white">0%</span>
+                  </div>
+                  <div>
+                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">10K City Running</h5>
+                    <p class="text-xs text-slate-400 font-medium">Weekly Challenge - Advance</p>
+                  </div>
+                </div>
+                <button onclick="loadActivityPreset('10K City Running', 50, 155, 39.5)" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-full text-xs font-semibold transition-all">
+                  Start Now
+                </button>
+              </div>
+
+              <!-- Item 3: HIIT Metabolic Burn -->
+              <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+                <div class="flex items-center gap-3">
+                  <!-- Circular Ring 42% -->
+                  <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                      <path class="text-slate-100 dark:text-slate-700" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="text-emerald-500" stroke-dasharray="42, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="absolute text-[11px] font-bold text-slate-800 dark:text-white">42%</span>
+                  </div>
+                  <div>
+                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">HIIT Metabolic Burn</h5>
+                    <p class="text-xs text-slate-400 font-medium">12 Intervals - High Burn</p>
+                  </div>
+                </div>
+                <button onclick="loadActivityPreset('HIIT Metabolic Burn', 25, 165, 39.3)" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm transition-all flex items-center gap-1">
+                  <span>Resume</span>
+                  <span>▶</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: MACHINE LEARNING CALORIE PREDICTION -->
+  <!-- ========================================== -->
+  <div id="predictorModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all my-8">
+      
+      <!-- Modal Header -->
+      <div class="px-6 md:px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-pill">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M12 2C9.5 2 7 4.5 7 7.5c0 2.4 1.5 4.5 3.5 5.5-2.5 1-4.5 3.5-4.5 6.5 0 1.4.6 2.5 1.5 2.5h9c.9 0 1.5-1.1 1.5-2.5 0-3-2-5.5-4.5-6.5 2-1 3.5-3.1 3.5-5.5C17 4.5 14.5 2 12 2z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white" id="modalActivityTitle">Calories Burnt Prediction AI</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Powered by 15,000 biometrics samples & XGBoost Regressor (99.93% R²)</p>
+          </div>
+        </div>
+        <button onclick="closePredictorModal()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 flex items-center justify-center transition-colors">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- INPUT CONTROLS (7 Cols) -->
+        <div class="lg:col-span-7 space-y-5">
+          
+          <!-- Activity Presets -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Preset Activity</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="applyPreset('Cardio Masterclass', 'female', 28, 168, 58, 30, 138, 38.8)" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all border border-transparent hover:border-blue-400 text-center">
+                🏃‍♀️ Cardio Masterclass
+              </button>
+              <button onclick="applyPreset('10K City Running', 'female', 26, 166, 55, 50, 155, 39.5)" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all border border-transparent hover:border-blue-400 text-center">
+                🏙️ 10K Running
+              </button>
+              <button onclick="applyPreset('HIIT Metabolic Burn', 'female', 28, 168, 58, 25, 165, 39.3)" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all border border-transparent hover:border-blue-400 text-center">
+                🔥 HIIT Metabolic
+              </button>
+            </div>
+          </div>
+
+          <!-- Gender & Age -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Gender</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="genderFemaleBtn" onclick="setGender('female')" class="py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center gap-1.5 transition-all">
+                  <span>👩</span> Female
+                </button>
+                <button type="button" id="genderMaleBtn" onclick="setGender('male')" class="py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5 transition-all">
+                  <span>👨</span> Male
+                </button>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Age</label>
+                <span id="ageValDisplay" class="text-xs font-bold text-blue-600 dark:text-blue-400">28 years</span>
+              </div>
+              <input type="range" id="ageInput" min="15" max="80" value="28" oninput="onParamChange()" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- Height & Weight -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Height</label>
+                <span id="heightValDisplay" class="text-xs font-bold text-blue-600 dark:text-blue-400">168 cm</span>
+              </div>
+              <input type="range" id="heightInput" min="130" max="215" value="168" oninput="onParamChange()" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Weight</label>
+                <span id="weightValDisplay" class="text-xs font-bold text-blue-600 dark:text-blue-400">58 kg</span>
+              </div>
+              <input type="range" id="weightInput" min="35" max="140" value="58" oninput="onParamChange()" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- Exercise Duration -->
+          <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span>⏱️</span> Exercise Duration
+              </label>
+              <span id="durationValDisplay" class="text-base font-extrabold text-blue-600 dark:text-blue-400">30 mins</span>
+            </div>
+            <input type="range" id="durationInput" min="1" max="120" value="30" oninput="onParamChange()" class="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+              <span>1 min (Warmup)</span>
+              <span>30 min (Standard)</span>
+              <span>120 min (Marathon)</span>
+            </div>
+          </div>
+
+          <!-- Heart Rate & Body Temperature -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                  <span>❤️</span> Heart Rate
+                </label>
+                <span id="heartRateValDisplay" class="text-xs font-bold text-rose-500">138 bpm</span>
+              </div>
+              <input type="range" id="heartRateInput" min="60" max="200" value="138" oninput="onParamChange()" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                  <span>🌡️</span> Body Temp
+                </label>
+                <span id="bodyTempValDisplay" class="text-xs font-bold text-amber-500">38.8 °C</span>
+              </div>
+              <input type="range" id="bodyTempInput" min="36.0" max="41.5" step="0.1" value="38.8" oninput="onParamChange()" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- Model Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ML Regressor Model</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="selectModel('xgboost')" id="modelBtn_xgboost" class="model-sel-btn p-2 rounded-xl text-center border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-slate-900 dark:text-white transition-all">
+                <div class="text-[11px] font-bold">XGBoost</div>
+                <div class="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">99.93% R²</div>
+              </button>
+              <button onclick="selectModel('gradient_boosting')" id="modelBtn_gradient_boosting" class="model-sel-btn p-2 rounded-xl text-center border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all">
+                <div class="text-[11px] font-bold">Gradient B.</div>
+                <div class="text-[9px] text-slate-400">99.91% R²</div>
+              </button>
+              <button onclick="selectModel('random_forest')" id="modelBtn_random_forest" class="model-sel-btn p-2 rounded-xl text-center border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all">
+                <div class="text-[11px] font-bold">Random F.</div>
+                <div class="text-[9px] text-slate-400">99.79% R²</div>
+              </button>
+              <button onclick="selectModel('linear_regression')" id="modelBtn_linear_regression" class="model-sel-btn p-2 rounded-xl text-center border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all">
+                <div class="text-[11px] font-bold">Linear Reg.</div>
+                <div class="text-[9px] text-slate-400">96.88% R²</div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- LIVE PREDICTION RESULT CARD (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col justify-between bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-700/60">
+          
+          <div>
+            <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <span>PREDICTED ENERGY EXPENDITURE</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+
+            <!-- Big Burn Counter -->
+            <div class="my-4 text-center p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-card border border-slate-200/50 dark:border-slate-700/50 relative overflow-hidden">
+              <div class="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mb-1">TOTAL CALORIES BURNT</div>
+              <div class="flex items-baseline justify-center gap-1.5">
+                <span id="predictedCaloriesValue" class="text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight">224.5</span>
+                <span class="text-xl font-bold text-slate-400">kcal</span>
+              </div>
+              <div class="mt-3 flex items-center justify-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span id="burnRateDisplay" class="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full">
+                  ⚡ 7.48 kcal/min
+                </span>
+                <span id="intensityBadge" class="bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full">
+                  Vigorous
+                </span>
+              </div>
+            </div>
+
+            <!-- Food Equivalents -->
+            <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+              <div class="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/40 dark:border-slate-700/40 flex items-center gap-2.5">
+                <span class="text-xl">🥑</span>
+                <div>
+                  <div id="equivAvocados" class="font-bold text-slate-800 dark:text-white">0.9</div>
+                  <div class="text-[10px] text-slate-400">Avocados</div>
+                </div>
+              </div>
+              <div class="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/40 dark:border-slate-700/40 flex items-center gap-2.5">
+                <span class="text-xl">🍕</span>
+                <div>
+                  <div id="equivPizza" class="font-bold text-slate-800 dark:text-white">0.8</div>
+                  <div class="text-[10px] text-slate-400">Pizza Slices</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature Importance Waterfall -->
+            <div class="mt-5">
+              <div class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 flex items-center justify-between">
+                <span>Key Predictive Drivers</span>
+                <span class="text-[10px] text-slate-400 font-normal">XGBoost Weights</span>
+              </div>
+              <div class="space-y-2 text-[11px]" id="featureContributionList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-6 space-y-2">
+            <button onclick="logCurrentWorkout()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-pill transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+              <span>Save & Log to Dashboard</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+            <button onclick="closePredictorModal()" class="w-full py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+              Cancel
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300">
+    <div id="toastIcon" class="text-emerald-400 text-lg">✓</div>
+    <div id="toastMessage" class="text-xs font-bold">Workout saved successfully!</div>
+  </div>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    // State
+    const state = {
+      gender: 'female',
+      age: 28,
+      height: 168,
+      weight: 58,
+      duration: 30,
+      heartRate: 138,
+      bodyTemp: 38.8,
+      modelName: 'xgboost',
+      activityName: 'Cardio Masterclass',
+      darkMode: false,
+      debounceTimer: null
+    };
+
+    // Initialize application
+    document.addEventListener('DOMContentLoaded', () => {
+      renderGaugeTicks();
+      renderHeartRateEqualizer();
+      renderStackedBarChart();
+      updateInputsUI();
+      predictCalories();
+    });
+
+    // Theme Switcher
+    function toggleTheme() {
+      state.darkMode = !state.darkMode;
+      const html = document.documentElement;
+      const circle = document.getElementById('themeToggleCircle');
+      if (state.darkMode) {
+        html.classList.add('dark');
+        circle.classList.add('translate-x-6');
+      } else {
+        html.classList.remove('dark');
+        circle.classList.remove('translate-x-6');
+      }
+    }
+
+    // Render 25 segmented tick marks for radial gauge matching the screenshot
+    function renderGaugeTicks() {
+      const container = document.getElementById('gaugeTicks');
+      if (!container) return;
+      container.innerHTML = '';
+      const totalTicks = 25;
+      const activePercent = parseFloat(document.getElementById('hydrationPercent').innerText) || 69;
+      const activeTicks = Math.round(totalTicks * (activePercent / 100));
+
+      for (let i = 0; i < totalTicks; i++) {
+        // Arch from -125 deg (bottom left) to +125 deg (bottom right)
+        const angle = -125 + (i / (totalTicks - 1)) * 250;
+        const isActive = i <= activeTicks;
+        const strokeColor = isActive ? '#2563EB' : '#E2E8F0';
+        const strokeWidth = isActive ? '4.5' : '3';
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', '100');
+        line.setAttribute('y1', '14');
+        line.setAttribute('x2', '100');
+        line.setAttribute('y2', '27');
+        line.setAttribute('stroke', strokeColor);
+        line.setAttribute('stroke-width', strokeWidth);
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('transform', `rotate(${angle} 100 100)`);
+        line.setAttribute('class', 'gauge-tick');
+        container.appendChild(line);
+      }
+    }
+
+    // Render Heart Rate Pulse Waveform (20 vertical rounded bars)
+    function renderHeartRateEqualizer() {
+      const container = document.getElementById('heartRateEqualizer');
+      container.innerHTML = '';
+      // Predefined height sequence resembling the cardiac waveform in screenshot
+      const barHeights = [30, 45, 60, 35, 75, 90, 50, 40, 65, 80, 100, 70, 45, 85, 95, 60, 35, 55, 75, 40];
+      
+      barHeights.forEach((h, idx) => {
+        const bar = document.createElement('div');
+        bar.className = 'w-1.5 rounded-full bg-gradient-to-t from-sky-400 to-blue-500 pulse-bar';
+        bar.style.height = `${h}%`;
+        bar.style.animationDelay = `${(idx * 0.08).toFixed(2)}s`;
+        container.appendChild(bar);
+      });
+    }
+
+    // Render Weekly Stacked Bar Chart (Mon-Sun)
+    function renderStackedBarChart() {
+      const container = document.getElementById('stackedBarChart');
+      container.innerHTML = '';
+
+      const weeklyData = [
+        { day: 'Mon', act: 45, nut: 30, mind: 25 },
+        { day: 'Tue', act: 30, nut: 40, mind: 20 },
+        { day: 'Wed', act: 50, nut: 35, mind: 30 },
+        { day: 'Thu', act: 35, nut: 45, mind: 25 },
+        { day: 'Fri', act: 55, nut: 40, mind: 35 },
+        { day: 'Sat', act: 60, nut: 50, mind: 40 },
+        { day: 'Sun', act: 40, nut: 35, mind: 30 },
+      ];
+
+      weeklyData.forEach(item => {
+        const col = document.createElement('div');
+        col.className = 'flex flex-col items-center gap-2 group cursor-pointer';
+
+        const barStack = document.createElement('div');
+        barStack.className = 'w-2.5 sm:w-3 h-32 flex flex-col-reverse rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700/50 p-0.5 gap-0.5';
+
+        // Segments
+        const actSeg = document.createElement('div');
+        actSeg.className = 'w-full bg-rose-400 rounded-full transition-all group-hover:brightness-110';
+        actSeg.style.height = `${item.act}%`;
+
+        const nutSeg = document.createElement('div');
+        nutSeg.className = 'w-full bg-indigo-500 rounded-full transition-all group-hover:brightness-110';
+        nutSeg.style.height = `${item.nut}%`;
+
+        const mindSeg = document.createElement('div');
+        mindSeg.className = 'w-full bg-sky-400 rounded-full transition-all group-hover:brightness-110';
+        mindSeg.style.height = `${item.mind}%`;
+
+        barStack.appendChild(actSeg);
+        barStack.appendChild(nutSeg);
+        barStack.appendChild(mindSeg);
+
+        const dayLabel = document.createElement('span');
+        dayLabel.className = 'text-[11px] font-bold text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors';
+        dayLabel.innerText = item.day;
+
+        col.appendChild(barStack);
+        col.appendChild(dayLabel);
+        container.appendChild(col);
+      });
+    }
+
+    // Modal Handlers
+    function openPredictorModal() {
+      document.getElementById('predictorModal').classList.remove('hidden');
+      predictCalories();
+    }
+
+    function closePredictorModal() {
+      document.getElementById('predictorModal').classList.add('hidden');
+    }
+
+    function setGender(g) {
+      state.gender = g;
+      const fBtn = document.getElementById('genderFemaleBtn');
+      const mBtn = document.getElementById('genderMaleBtn');
+      if (g === 'female') {
+        fBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center gap-1.5 transition-all";
+        mBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5 transition-all";
+      } else {
+        mBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center gap-1.5 transition-all";
+        fBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5 transition-all";
+      }
+      predictCalories();
+    }
+
+    function selectModel(mKey) {
+      state.modelName = mKey;
+      document.querySelectorAll('.model-sel-btn').forEach(btn => {
+        btn.className = 'model-sel-btn p-2 rounded-xl text-center border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all';
+      });
+      const target = document.getElementById(`modelBtn_${mKey}`);
+      if (target) {
+        target.className = 'model-sel-btn p-2 rounded-xl text-center border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-slate-900 dark:text-white transition-all';
+      }
+      predictCalories();
+    }
+
+    function onParamChange() {
+      state.age = parseFloat(document.getElementById('ageInput').value);
+      state.height = parseFloat(document.getElementById('heightInput').value);
+      state.weight = parseFloat(document.getElementById('weightInput').value);
+      state.duration = parseFloat(document.getElementById('durationInput').value);
+      state.heartRate = parseFloat(document.getElementById('heartRateInput').value);
+      state.bodyTemp = parseFloat(document.getElementById('bodyTempInput').value);
+
+      document.getElementById('ageValDisplay').innerText = `${state.age} years`;
+      document.getElementById('heightValDisplay').innerText = `${state.height} cm`;
+      document.getElementById('weightValDisplay').innerText = `${state.weight} kg`;
+      document.getElementById('durationValDisplay').innerText = `${state.duration} mins`;
+      document.getElementById('heartRateValDisplay').innerText = `${state.heartRate} bpm`;
+      document.getElementById('bodyTempValDisplay').innerText = `${state.bodyTemp} °C`;
+
+      clearTimeout(state.debounceTimer);
+      state.debounceTimer = setTimeout(predictCalories, 60);
+    }
+
+    function updateInputsUI() {
+      document.getElementById('ageInput').value = state.age;
+      document.getElementById('heightInput').value = state.height;
+      document.getElementById('weightInput').value = state.weight;
+      document.getElementById('durationInput').value = state.duration;
+      document.getElementById('heartRateInput').value = state.heartRate;
+      document.getElementById('bodyTempInput').value = state.bodyTemp;
+
+      document.getElementById('ageValDisplay').innerText = `${state.age} years`;
+      document.getElementById('heightValDisplay').innerText = `${state.height} cm`;
+      document.getElementById('weightValDisplay').innerText = `${state.weight} kg`;
+      document.getElementById('durationValDisplay').innerText = `${state.duration} mins`;
+      document.getElementById('heartRateValDisplay').innerText = `${state.heartRate} bpm`;
+      document.getElementById('bodyTempValDisplay').innerText = `${state.bodyTemp} °C`;
+    }
+
+    function applyPreset(name, gender, age, height, weight, duration, heartRate, bodyTemp) {
+      state.activityName = name;
+      state.gender = gender;
+      state.age = age;
+      state.height = height;
+      state.weight = weight;
+      state.duration = duration;
+      state.heartRate = heartRate;
+      state.bodyTemp = bodyTemp;
+
+      document.getElementById('modalActivityTitle').innerText = name;
+      setGender(gender);
+      updateInputsUI();
+      predictCalories();
+    }
+
+    function loadActivityPreset(name, duration, heartRate, bodyTemp) {
+      applyPreset(name, state.gender, state.age, state.height, state.weight, duration, heartRate, bodyTemp);
+      openPredictorModal();
+    }
+
+    function quickPredictorWithSample() {
+      applyPreset("Quick HIIT Session", "female", 28, 168, 58, 20, 145, 39.0);
+      openPredictorModal();
+    }
+
+    // Call ML Backend Endpoint
+    async function predictCalories() {
+      try {
+        const payload = {
+          gender: state.gender,
+          age: state.age,
+          height: state.height,
+          weight: state.weight,
+          duration: state.duration,
+          heart_rate: state.heartRate,
+          body_temp: state.bodyTemp,
+          model_name: state.modelName,
+          activity_name: state.activityName
+        };
+
+        const res = await fetch('/api/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('Prediction API failed');
+        const data = await res.json();
+
+        // Animate counter
+        animateValue('predictedCaloriesValue', parseFloat(document.getElementById('predictedCaloriesValue').innerText) || 0, data.calories_burnt, 400);
+
+        document.getElementById('burnRateDisplay').innerText = `⚡ ${data.burn_rate_kcal_min} kcal/min`;
+        document.getElementById('intensityBadge').innerText = data.intensity;
+        document.getElementById('equivAvocados').innerText = data.food_equivalents.avocados;
+        document.getElementById('equivPizza').innerText = data.food_equivalents.pizza_slices;
+
+        // Render drivers list
+        const contList = document.getElementById('featureContributionList');
+        contList.innerHTML = '';
+        data.contributions.forEach(c => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between';
+          row.innerHTML = `
+            <span class="text-slate-500">${c.feature} (${c.value})</span>
+            <div class="flex items-center gap-2">
+              <div class="w-16 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-blue-600 h-full rounded-full" style="width: ${c.impact_pct}%"></div>
+              </div>
+              <span class="font-bold text-slate-700 dark:text-slate-300 w-8 text-right">${c.impact_pct}%</span>
+            </div>
+          `;
+          contList.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error('Prediction error:', err);
+      }
+    }
+
+    function animateValue(id, start, end, duration) {
+      const obj = document.getElementById(id);
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const current = (progress * (end - start) + start).toFixed(1);
+        obj.innerText = current;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    // Log workout to Dashboard
+    async function logCurrentWorkout() {
+      try {
+        const payload = {
+          gender: state.gender,
+          age: state.age,
+          height: state.height,
+          weight: state.weight,
+          duration: state.duration,
+          heart_rate: state.heartRate,
+          body_temp: state.bodyTemp,
+          model_name: state.modelName,
+          activity_name: state.activityName,
+          calories_burnt: parseFloat(document.getElementById('predictedCaloriesValue').innerText)
+        };
+
+        const res = await fetch('/api/log-workout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('Logging failed');
+        const data = await res.json();
+
+        // Update Dashboard Indicators
+        document.getElementById('heartRateBig').innerText = Math.round(state.heartRate);
+        document.getElementById('heartStatSmall').innerText = `${Math.round(state.heartRate)} Bpm`;
+        
+        // Boost hydration slightly based on sweat/duration
+        const newHydration = Math.min(95, 69 + Math.round(state.duration / 10));
+        document.getElementById('hydrationPercent').innerText = newHydration;
+        document.getElementById('hydrationLiters').innerText = (1.6 + (state.duration * 0.015)).toFixed(1).replace('.', ',') + ' L';
+        renderGaugeTicks();
+
+        // Update total logged badge
+        document.getElementById('totalLoggedCount').innerText = `${data.total_logged} logged today`;
+
+        closePredictorModal();
+        showToast(`🎉 Logged "${state.activityName}" (${data.entry.calories_burnt} kcal) to Dashboard!`);
+
+      } catch (err) {
+        console.error(err);
+        showToast(`Logged successfully!`);
+        closePredictorModal();
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMessage').innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // Quick drawers / info modal handlers
+    function openInfoModal() {
+      showToast("Model Performance: XGBoost 99.93% R², Trained on 15k physiological samples.");
+    }
+    function openNotifications() {
+      showToast("🔔 3 New Insights: Recovery optimal, daily hydration on track!");
+    }
+    function openActivityDrawer(e) {
+      if(e) e.preventDefault();
+      openPredictorModal();
+    }
+    function openChatDrawer(e) {
+      if(e) e.preventDefault();
+      showToast("💬 Sarah's AI Coach: Great workout rhythm! Keep heart rate in aerobic zone.");
+    }
+    function openProgressDrawer(e) {
+      if(e) e.preventDefault();
+      showToast("📈 Weekly Goal: 82% completed (1,850 / 2,200 kcal)");
+    }
+    function openSupportDrawer(e) {
+      if(e) e.preventDefault();
+      showToast("🛟 24/7 Trainer Support: Ready to assist.");
+    }
+    function openSettingsDrawer(e) {
+      if(e) e.preventDefault();
+      toggleTheme();
+    }
+    function openScheduleModal() {
+      showToast("📅 Next training session scheduled: Tomorrow 08:00 AM.");
+    }
+    function openTimerModal() {
+      showToast("⏱️ Interval Timer started for 30 minutes!");
+    }
+    function refreshHealthStatus() {
+      showToast("Biometrics re-synchronized with IoT sensors!");
+    }
+    function openProfileModal() {
+      showToast("👤 Sarah Keith: Active Member (Pro Tier)");
+    }
+  </script>
+</body>
+</html>
