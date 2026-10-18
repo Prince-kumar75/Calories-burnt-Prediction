@@ -66,6 +66,6 @@ if os.path.exists(html_path):
     if athlete_b64:
         html_content = html_content.replace('/static/assets/hero_athlete.png', athlete_b64)
         
-    components.html(html_content, height=980, scrolling=True)
+    components.html(html_content, height=1000, scrolling=True)
 else:
     st.error("static/index.html not found.")
