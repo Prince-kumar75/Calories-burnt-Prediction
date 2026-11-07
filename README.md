@@ -1,6 +1,6 @@
 # 🏃‍♀️ AI Calories Burnt Prediction System & Fitness Dashboard
 
-A production-ready Machine Learning web application predicting **Calories Burnt** during exercise based on physiological biometrics, paired with an ultra-clean, modern fitness dashboard UI inspired by your design.
+A production-ready Machine Learning web application predicting **Calories Burnt** during exercise based on physiological biometrics, paired with an ultra-clean, modern fitness dashboard UI/UX inspired by your design.
 
 ---
 
