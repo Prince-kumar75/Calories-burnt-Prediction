@@ -32,7 +32,7 @@ Trained on **15,000 real-world exercise biometric samples** using cross-validate
 | **XGBoost Regressor** | **0.9993 (99.93%)** | **1.183 kcal** | **1.649** | 🏆 **Best Performer** |
 | **Gradient Boosting** | **0.9991 (99.91%)** | **1.431 kcal** | **1.948** | Ultra-smooth |
 | **Random Forest** | **0.9979 (99.79%)** | **1.901 kcal** | **2.921** | Robust Ensemble |
-| **Linear Regression** | **0.9688 (96.88%)** | **8.195 kcal** | **11.220** | Baseline |
+| **Linear Regression** | **0.9688 (96.88%)** | **8.195 kcal** | **11.220** |
 
 ---
 
